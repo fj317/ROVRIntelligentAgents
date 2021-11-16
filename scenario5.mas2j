@@ -1,0 +1,64 @@
+MAS ia_submission {
+
+	infrastructure: 
+		Centralised
+
+	environment:
+		
+		/* 
+			NOTE ON CONFIGURING THE ENVIRONMENT
+		
+			required parameters:
+				- mas2j_file
+				- scenario_file
+				- discovery_type
+		
+		
+				mas2j_file: This must be the name of the current mas2j_file
+				so for intro_scenario.mas2j, the value of mas2j_file must be
+				intro_scenario.mas2j
+				
+				WE HAVE DONE THIS FOR ALL THE MAS2J FILES INCLIDED
+				
+				
+				scenario_file: This is the name of the scenario file you want to run
+				ALL GRADED SCENARIOS HAVE BEEN LABELLED AND PLACED IN THEIR RESPECTIVE MAS2J FILES
+				Though you may want to try out custom maps, just remember to set the name to the 
+				scenario file you wish to run
+				
+				discovery_type: DO NOT CHANGE THIS.
+				THIS IS IMPORTANT FOR SCENARIOS WHERE AGENTS ARE ALLOWED TO SEE EACH OTHER
+				
+		*/
+		rover.RoverWorld(
+			"mas2j_file=scenario5.mas2j", 
+			"scenario_file=scenarios/5/map5_static_01.json",
+			"discovery_type=none")
+	
+	agents:
+	
+		/*
+			NOTE ON DEFINING AGENTS
+			
+			parameters:
+				capacity  (REQUIRED)
+				scan_range (REQUIRED)
+				resource_type (SET TO FIRST RESCOURCE COLLECTED IF NOT SPECIFIED)
+				group (REQUIRED)
+		
+			
+				capacity: max no. of resources your agent can carry. This can not be changed at run time.
+				scan_range: max radius at which an agent can scan its grid. This can not be changed at run time.
+				resource_type: resource an agent can collect. Can not be changed once set
+				group: A group an agent belogs to. can be any value from 0 to 6. That is 0,1,2,3,4,5 and 6
+				This can be used to assign a different colour to agents to aid debugging and also to differntiate
+				them in advanced scenarios.
+		*/
+	
+		
+		/**** ADD YOUR AGENT(S) HERE *****/
+		blank [ capacity =3, scan_range=3, group=6, mindinspector="gui(cycle,html,history)"];
+		
+	aslSourcePath:
+		"src/asl";
+}
