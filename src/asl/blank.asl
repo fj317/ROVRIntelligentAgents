@@ -6,6 +6,7 @@ capacity(3).
 distanceToBase(0, 0).
 totalDistanceTravelled(0, 0).
 numberOfTrips(0).
+goldToCollect(0).
 
 
 /* Initial goals */
@@ -70,6 +71,7 @@ numberOfTrips(0).
 @resource_found[atomic]
 + resource_found(ResourceType, Quantity, XDist, YDist): capacity(TotalCapacity) <-
 	.print("Resource found!");
+	-+goldToCollect(Quantity);
 	move(XDist, YDist);
 	?totalDistanceTravelled(XDistance, YDistance);
 	-+totalDistanceTravelled(XDistance + XDist, YDistance + YDist);
@@ -87,7 +89,7 @@ numberOfTrips(0).
 		// deposit gold and return
 		!goldDeposit;
 	}
-	// if no gold found then move back to scan point and let movement continue
+	// once all gold trips made, move back to scan point and let movement continue
 	move(-XDist, -YDist);
 	-+totalDistanceTravelled(XDistance - XDist, YDistance - YDist);
 	rover.ia.log_movement(-XDist, -YDist);
@@ -95,12 +97,27 @@ numberOfTrips(0).
 	
 +! goldCollect: true <-
 	.print("Collecting gold now...");
-	?capacity(TotalCapacity)
-	for(.range(X, 1, TotalCapacity)) {
-		collect("Gold");
-		-+goldCollected(X);
-		.print("Collected gold: ", X);
+	?capacity(TotalCapacity);
+	?goldToCollect(GoldLeft);
+	// if more gold left capacity then collect to max of capacity
+	if (GoldLeft > TotalCapacity) {
+		for(.range(X, 1, TotalCapacity)) {
+			collect("Gold");
+			-+goldCollected(X);
+			-+goldToCollect(GoldLeft - TotalCapacity);
+			.print("Collected gold: ", X);
+		}
+	// if less gold than capacity then collect all leftover gold
+	} else {
+		for(.range(X, 1, GoldLeft)) {
+			collect("Gold");
+			-+goldCollected(X);
+			-+goldToCollect(0);
+			.print("Collected gold: ", X);
+		}
+		
 	}
+
 	.
 	
 -! goldCollect: true <-
@@ -124,13 +141,12 @@ numberOfTrips(0).
 	.
 	
 +! return_to_gold: distanceToGold(XDist, YDist) <-
-	.print("Moving back to the gold");
 	move(XDist, YDist);
 	rover.ia.log_movement(XDist, YDist);
 	.
 	
 + invalid_action(ActionName, Reason) <-
-	.print("Invalid action because ", Reason);
+	.print("Invalid ", ActionName, " action because ", Reason);
 	.
 	
 
