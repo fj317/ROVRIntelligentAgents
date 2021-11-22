@@ -43,6 +43,11 @@ MAS ia_submission {
 			"discovery_type=none")
 	
 	agents:
+		agentCollectorDiamond;
+		agentCollectorGold;
+		agentScanner;
+		scenario2Agent2;
+		scenario2Agent1;
 	
 		/*
 			NOTE ON DEFINING AGENTS

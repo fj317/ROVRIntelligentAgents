@@ -59,7 +59,10 @@ MAS ia_submission {
 				
 		*/
 	
-		blank [ capacity =3, scan_range=3, group=1, mindinspector="gui(cycle,html,history)"];
+		//blank [ capacity =3, scan_range=3, group=1, mindinspector="gui(cycle,html,history)"];
+		agentScanner [ capacity =0, scan_range=6, group=1, mindinspector="gui(cycle,html,history)"];
+		agentCollectorGold [ capacity =6, scan_range=0, group=1, mindinspector="gui(cycle,html,history)"];
+		
 		
 		
 	aslSourcePath:
