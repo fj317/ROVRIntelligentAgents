@@ -32,7 +32,7 @@ MAS ia_submission {
 		*/
 		rover.RoverWorld(
 			"mas2j_file=scenario3.mas2j", 
-			"scenario_file=scenarios/3/map3_static.json",
+			"scenario_file=scenarios/3/map3_dynamic.json",
 			"discovery_type=none")
 	
 	agents:
@@ -59,8 +59,9 @@ MAS ia_submission {
 				
 		*/
 	
-		blank [ capacity =3, scan_range=3, group=1, mindinspector="gui(cycle,html,history)"];
-		
+		agentScanner [ capacity =0, scan_range=6, group=1, mindinspector="gui(cycle,html,history)"];
+		agentCollectorGold [ capacity =6, scan_range=0, group=2, mindinspector="gui(cycle,html,history)"];
+		agentCollectorDiamond [ capacity =6, scan_range=0, group=3, mindinspector="gui(cycle,html,history)"];
 		
 	aslSourcePath:
 		"src/asl";

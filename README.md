@@ -1,6 +1,12 @@
 
 # Rover CourseWork
 
+__GRADED SCENARIOS  FILES WILL BE MADE AVAILABLE AT 12 NOON__
+Template project for the Intelligent Agents (CM30174/50206) Rover CourseWork (2021/22 session).
+__`It is important that you read the entire page`__
+
+
+
 ## What you need to get started 
 At this point, we expect that you have installed both eclipse & Jason (version 2.4).
 If you are yet to do so, kindly refer to the lab materials provided on Moodle. 

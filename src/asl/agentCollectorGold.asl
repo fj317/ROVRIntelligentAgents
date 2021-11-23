@@ -15,15 +15,15 @@ numberOfTrips(0).
 
 +!checkForGold : true <- 
 	// check if resource found
-	?goldResources(ResourceList);
-	if (not(.empty(ResourceList))) {
-		// if found, call resourceFound plan
-		.print("Resource found!");
+	.wait({+goldResources(GoldResourceList)});
+	// for each member of GoldResourceList, run resourceFound
+	for(.member(X, GoldResourceList)) {
 		!resourceFound;
 	}
-	// if not found, repeat
-	!checkForGold;
+	// once finished, kill agent
+	.kill_agent(agentCollectorGold);
 	.
+	
 @resourceFound[atomic]
 +! resourceFound: true <-
 	?goldResources(ResourceList);
