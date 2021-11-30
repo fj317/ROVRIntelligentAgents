@@ -3,7 +3,14 @@ goldResources([]).
 diamondResources([]).
 isDuplicate(true).
 
-!scan_movement.
+!initialise.
+
++!initialise: true <-
+	.print("Initialising stuff");
+	rover.ia.get_map_size(Width, Height);
+	ia_submission.mapSetup(Width, Height);
+	!scan_movement
+	.
 
 +! scan_movement: true <-
 	.print("Scanning...");
@@ -31,9 +38,14 @@ isDuplicate(true).
 		move(8, 0);
 		// update totalMovement
 		-+totalMovement(TotalXDist + 8, TotalYDist);
+		.print("Here");
 	}
 	// recursively call scan_movement plan
 	!scan_movement;
+	.
+	
+-! scan_movement: true <-
+	.print("Error doing movement & scanning");
 	.
 	
 +! sendResourceList: true <-
@@ -50,10 +62,55 @@ isDuplicate(true).
 	.print("Error sending resource lists");
 	.
 	
++ obstructed(XTravelled, YTravelled, XLeft, YLeft): true <-
+	.print("Agent obstructed");
+	// work out correct X & Y distance from base
+	?totalMovement(TotalXDist, TotalYDist);
+	rover.ia.get_map_size(Width, Height);
+	XDistance = TotalXDist + XTravelled;
+	YDistance = TotalYDist + XTravelled;
+	if (XDistance >= Width/2) { 
+		// if the Y distance travelled is more than half the height, same as above
+		if (YDistance >= Height/2) {
+			NewXDistance = -(Width - XDistance);
+			NewYDistance = -(Height - YDistance);
+		} else {
+			NewXDistance = -(Width - XDistance);
+			NewYDistance = YDistance;
+		}
+	} else {
+		// if the Y distance travelled is more than half the height, same as above
+		if (YDistance >= Height/2) {
+			NewXDistance = XDistance;
+			NewYDistance = -(Height - YDistance);
+		} else {
+			// if the quickest route is the way we came, backtrack using this route
+			NewXDistance = XDistance;
+			NewYDistance = YDistance;
+		}
+	}	
+	if (XLeft > 0) { // if XLeft > 0 
+		// then obstacle is to the right
+		// add obstacle to map
+		ia_submission.addObstacle(TotalX + XTravelled + 1, TotalY + YTravelled);
+		
+		
+	} elif (YLeft > 0) { // else if YLeft > 0
+		// then obstacle is below
+		// add obstacle to map
+		ia_submission.addObstacle(TotalX + XTravelled, TotalY + YTravelled + 1);
+	}
+	// use A* search to find quickest route around it
+	// goal is (TotalX + XTravelled + XLeft, TotalY + YTravelled + YLeft)
+	
+	// once at goal, call scan_movement plan
+	!plan_movement;
+	.
+	
 	
 @resource_found[atomic]
-	+ resource_found(ResourceType, Quantity, XDistToResource, YDistToResource): true <-
-	.print("Resource found");
++ resource_found(ResourceType, Quantity, XDistToResource, YDistToResource): true <-
+	.print("Object found");
 	?totalMovement(TotalXDist, TotalYDist);
 	// add resource coord to array
 	?goldResources(GoldResourceList);
@@ -105,7 +162,7 @@ isDuplicate(true).
 				-+goldResources(NewGoldResourceList);
 			}		
 		}
-	} else {
+	} elif (ResourceType == "Diamond") {
 		// else if diamond:
 		if (.empty(DiamondResourceList)) {
 			-+diamondResources([[ResourceType, Quantity, NewXDistance, NewYDistance]])
@@ -127,6 +184,12 @@ isDuplicate(true).
 				-+diamondResources(NewDiamondResourceList);
 			}		
 		}
+			
+	} elif (ResourceType == "Obstacle") {
+		// else if obstacle
+		// add obstacle to map
+		ia_submission.addObstacle(XDistance, YDistance);
+		
 	}
 	.
 	

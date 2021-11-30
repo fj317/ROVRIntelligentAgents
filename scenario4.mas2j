@@ -32,7 +32,7 @@ MAS ia_submission {
 		*/
 		rover.RoverWorld(
 			"mas2j_file=scenario4.mas2j", 
-			"scenario_file=scenarios/4/map4_dynamic.json",
+			"scenario_file=scenarios/4/map4_static.json",
 			"discovery_type=none")
 	
 	agents:
