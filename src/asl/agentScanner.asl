@@ -38,7 +38,6 @@ isDuplicate(true).
 		move(8, 0);
 		// update totalMovement
 		-+totalMovement(TotalXDist + 8, TotalYDist);
-		.print("Here");
 	}
 	// recursively call scan_movement plan
 	!scan_movement;
@@ -68,7 +67,7 @@ isDuplicate(true).
 	?totalMovement(TotalXDist, TotalYDist);
 	rover.ia.get_map_size(Width, Height);
 	XDistance = TotalXDist + XTravelled;
-	YDistance = TotalYDist + XTravelled;
+	YDistance = TotalYDist + YTravelled;
 	if (XDistance >= Width/2) { 
 		// if the Y distance travelled is more than half the height, same as above
 		if (YDistance >= Height/2) {
@@ -92,19 +91,36 @@ isDuplicate(true).
 	if (XLeft > 0) { // if XLeft > 0 
 		// then obstacle is to the right
 		// add obstacle to map
-		ia_submission.addObstacle(TotalX + XTravelled + 1, TotalY + YTravelled);
+		ia_submission.addObstacle(NewXDistance + 1, NewYDistance);
 		
 		
 	} elif (YLeft > 0) { // else if YLeft > 0
 		// then obstacle is below
 		// add obstacle to map
-		ia_submission.addObstacle(TotalX + XTravelled, TotalY + YTravelled + 1);
+		ia_submission.addObstacle(NewXDistance, NewYDistance + 1);
 	}
+	// update TotalX and TotalY
+	-+totalMovement(XDistance, YDistance);
+	// scan to see surrounding environment
+	scan(6);
 	// use A* search to find quickest route around it
 	// goal is (TotalX + XTravelled + XLeft, TotalY + YTravelled + YLeft)
-	
+	// current (x, y) is (base+Total+Travelled)
+	// goal (x, y) is (base+Total+Travelled+Left)
+	// base is added in Handler java class
+	ia_submission.findRoute(NewXDistance, NewYDistance, NewXDistance + XLeft, NewYDistance + YLeft, MoveList);
+	.print(MoveList);
+	// do moves
+	// loop through MoveList, doing each move in turn
+	for (.member(CurrentMoveVector, MoveList)) {
+		.nth(0, CurrentMoveVector, XVector);
+		.nth(1, CurrentMoveVector, YVector);
+		move(XVector, YVector);
+		?totalMovement(CurrXDistance, CurrYDistance);
+		-+totalMovement(CurrXDistance + XVector, CurrYDistance + YVector);
+	}	
 	// once at goal, call scan_movement plan
-	!plan_movement;
+	!scan_movement;
 	.
 	
 	
@@ -188,8 +204,7 @@ isDuplicate(true).
 	} elif (ResourceType == "Obstacle") {
 		// else if obstacle
 		// add obstacle to map
-		ia_submission.addObstacle(XDistance, YDistance);
-		
+		ia_submission.addObstacle(NewXDistance, NewYDistance);
 	}
 	.
 	

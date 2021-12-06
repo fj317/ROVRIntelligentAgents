@@ -12,6 +12,7 @@ public class addObstacle extends DefaultInternalAction {
     	try {
         	int x = (int)((NumberTerm)args[0]).solve();
         	int y = (int)((NumberTerm)args[1]).solve();
+    		System.out.println("AddObstacle - x, y: " + x + ", " + y);
         	Handler.getInstance().addObstacle(x, y);
         	return true;
     	} catch (Exception e) {
