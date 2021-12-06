@@ -57,7 +57,7 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		blank [ capacity =3, scan_range=3, group=6, mindinspector="gui(cycle,html,history)"];
+		agentMaze [ capacity =5, scan_range=1, group=6, mindinspector="gui(cycle,html,history)"];
 		
 	aslSourcePath:
 		"src/asl";

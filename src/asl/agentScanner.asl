@@ -28,6 +28,7 @@ isDuplicate(true).
 	} elif (Width <= TotalXDist + 8) {
 		// move back to X coord 0 
 		move(Width - TotalXDist, 0);
+		-+totalMovement(0, TotalYDist);
 		// move 9 vertically
 		move(0, 9);
 		// update totalMovement
@@ -53,8 +54,8 @@ isDuplicate(true).
 	?diamondResources(DiamondResourceList);
 	.print("Gold resource List: ", GoldResourceList);
 	.print("Diamond resource List: ", DiamondResourceList);
-	.send(agentCollectorGold, tell, goldResources(GoldResourceList));
-	.send(agentCollectorDiamond, tell, diamondResources(DiamondResourceList));
+	//.send(agentCollectorGold, tell, goldResources(GoldResourceList));
+	.send(agentCollectorDiamondExtra, tell, diamondResources(DiamondResourceList));
 	.
 	
 -! sendResourceList: true <-
@@ -104,10 +105,6 @@ isDuplicate(true).
 	// scan to see surrounding environment
 	scan(6);
 	// use A* search to find quickest route around it
-	// goal is (TotalX + XTravelled + XLeft, TotalY + YTravelled + YLeft)
-	// current (x, y) is (base+Total+Travelled)
-	// goal (x, y) is (base+Total+Travelled+Left)
-	// base is added in Handler java class
 	ia_submission.findRoute(NewXDistance, NewYDistance, NewXDistance + XLeft, NewYDistance + YLeft, MoveList);
 	.print(MoveList);
 	// do moves

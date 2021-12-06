@@ -828,6 +828,15 @@
       "view": 0,
       "has_artefact": 1
     },
+    "15_0": {
+      "base": 1,
+      "clear": 0,
+      "diamond": 0,
+      "gold": 0,
+      "obstacle": 0,
+      "view": 0,
+      "has_artefact": 1
+    },
     "0_11": {
       "base": 0,
       "clear": 0,
