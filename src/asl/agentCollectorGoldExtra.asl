@@ -5,7 +5,8 @@ goldResources([]).
 goldCollected(0).
 goldAtResource(0).
 numberOfTrips(0).
-moveList([]).
+currentPos(0, 0).
+currentPlan(0).
 
 /* Initial goals */
 
@@ -21,7 +22,7 @@ moveList([]).
 		!resourceFound;
 	}
 	// once finished, kill agent
-	.kill_agent(agentCollectorGold);
+	.kill_agent(agentCollectorGoldExtra);
 	.
 
 @resourceFound[atomic]
@@ -29,24 +30,12 @@ moveList([]).
 	?goldResources(ResourceList);
 	// get current resource
 	.nth(0, ResourceList, CurrentResource);
-	// find distance to gold and update distance to gold
-	// start is baseCoords
-	// goal is XDistance + baseCoords
-	.nth(2, CurrentResource, XDistance);
-	.nth(3, CurrentResource, YDistance);
 	.print("Its go time!");
 	// find quantity of gold and update goldAtResource
 	.nth(1, CurrentResource, GoldAmount);
 	-+goldAtResource(GoldAmount);
-	// use A* search to find route to gold
-	rover.ia.get_map_size(Width, Height);
-	ia_submission.findRoute(0, 0, XDistance, YDistance, MoveList);
-	-+moveList(MoveList);
-	for (.member(CurrentMoveVector, MoveList)) {
-		.nth(0, CurrentMoveVector, XVector);
-		.nth(1, CurrentMoveVector, YVector);
-		move(XVector, YVector);
-	}
+	// go to resource
+	!moveToResource;
 	// work out how many trips to do
 	// round up
 	rover.ia.check_config(Capacity, Scanrange, Resourcetype);
@@ -65,12 +54,37 @@ moveList([]).
 		// if last trip dont return to gold
 		?goldAtResource(GoldLeft);
 		if (GoldLeft > 0) {
-			!returnToGold;
+			!moveToResource;
 		}
 	}
 	// remove resource from list
 	.delete(0, ResourceList, NewResourceList);
 	-+goldResources(NewResourceList);
+	.
+	
++! moveToResource: true <- 
+	-+currentPlan(1);
+	.print("Moving to resource");
+	?currentPos(XPos, YPos);
+	?goldResources(ResourceList);
+	.nth(0, ResourceList, CurrentResource);
+	.nth(2, CurrentResource, XDistance);
+	.nth(3, CurrentResource, YDistance);
+	// use A* search to find route to gold
+	ia_submission.findRoute(XPos, YPos, XDistance, YDistance, MoveList);
+	.print(MoveList);
+	for (.member(CurrentMoveVector, MoveList)) {
+		.nth(0, CurrentMoveVector, XVector);
+		.nth(1, CurrentMoveVector, YVector);
+		move(XVector, YVector);
+		?currentPos(NewXPos, NewYPos);
+		-+currentPos(NewXPos + XVector, NewYPos + YVector);
+		ia_submission.agentMovedUpdateMap(NewXPos + XVector, NewYPos + YVector, NewXPos, NewXPos)
+	}
+	.
+	
+-! moveToResource: true <-
+	.print("Error moving to resource");
 	.
 	
 +! collectGold: true <-
@@ -103,13 +117,23 @@ moveList([]).
 		
 +! returnToBase: true <-
 	.print("Returning to base");
-	?moveList(MoveList);
-	.reverse(MoveList, ReversedMoveList);
-	for (.member(CurrentMoveVector, ReversedMoveList)) {
+	-+currentPlan(0);
+	// use A* search to return to base
+	?currentPos(XPos, YPos);
+	ia_submission.findRoute(XPos, YPos, 0, 0, MoveList);
+	.print(MoveList);
+	for (.member(CurrentMoveVector, MoveList)) {
 		.nth(0, CurrentMoveVector, XVector);
 		.nth(1, CurrentMoveVector, YVector);
-		move(-XVector, -YVector);
+		move(XVector, YVector);
+		?currentPos(NewXPos, NewYPos);
+		-+currentPos(NewXPos + XVector, NewYPos + YVector);
+		ia_submission.agentMovedUpdateMap(NewXPos + XVector, NewYPos + YVector, NewXPos, NewXPos)
 	}
+	.
+
+-! returnToBase: true <-
+	.print("Error returning to base");
 	.
 	
 +! depositGold: true <-
@@ -120,14 +144,26 @@ moveList([]).
 	}
 	-+goldCollected(0);
 	.
-
-+! returnToGold: true <-
-	.print("Returning to gold");
-	?moveList(MoveList);
-	for (.member(CurrentMoveVector, MoveList)) {
-		.nth(0, CurrentMoveVector, XVector);
-		.nth(1, CurrentMoveVector, YVector);
-		move(XVector, YVector);
+	
+@obstructed[atomic]
++ obstructed(XTravelled, YTravelled, XLeft, YLeft): true <-
+	// if obstructed by another agent then continue with plan
+	.print("Agent obstructed during movement plan.");
+	?currentPos(XPos, YPos);
+	-+currentPos(XPos + XTravelled, YPos + YTravelled);
+	// wait to let other agent catch up before continuing with movement
+	.wait(1000);
+	// recall plan
+	?currentPlan(PlanToDo);
+	if (PlanToDo == 0) {
+		!returnToBase;
+	} elif (PlanToDo == 1) {
+		!moveToResource;
 	}
-	.	
+	.
+	
+	
+- obstructed(XTravelled, YTravelled, XLeft, YLeft): true <-
+	.print("Obstructed plan failed");
+	.
 

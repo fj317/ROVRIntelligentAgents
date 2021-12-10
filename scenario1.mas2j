@@ -43,6 +43,8 @@ MAS ia_submission {
 			"discovery_type=none")
 	
 	agents:
+		agentScannerv2;
+		tester;
 		agentMaze;
 		agentCollectorGoldExtra;
 		agentCollectorDiamondExtra;

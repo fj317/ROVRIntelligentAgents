@@ -1,7 +1,11 @@
 totalMovement(0, 0).
 goldResources([]).
 diamondResources([]).
+goldResourcesv2([]).
+diamondResourcesv2([]).
 isDuplicate(true).
+goalCoords([]).
+rowComplete(false).
 
 !initialise.
 
@@ -11,51 +15,109 @@ isDuplicate(true).
 	ia_submission.mapSetup(Width, Height);
 	!scan_movement
 	.
+	
++! generalMove: true <-
+	.drop_all_intentions;
+	// use A* search to find route to goal coords
+	?goalCoords(GoalCoords);
+	rover.ia.get_map_size(Width, Height);
+	?totalMovement(XPos, YPos);
+	.length(GoalCoords, GoalCoordsLength);
+	.nth(GoalCoordsLength-1, GoalCoords, CurrentGoalCoords);
+	.nth(0, CurrentGoalCoords, GoalCoordsX);
+	.nth(1, CurrentGoalCoords, GoalCoordsY);
+	ia_submission.findRoute(XPos, YPos, GoalCoordsX, GoalCoordsY, MoveList);
+	//.print(MoveList);
+	for (.member(CurrentMoveVector, MoveList)) {
+		.nth(0, CurrentMoveVector, XVector);
+		.nth(1, CurrentMoveVector, YVector);
+		move(XVector, YVector);
+		?totalMovement(CurrXPos, CurrYPos);
+		-+totalMovement(CurrXPos + XVector,  CurrYPos + YVector);
+		.print("(x, y): ", CurrXPos, ", ", CurrYPos);
+	}
+	// check if completed whole row
+	?rowComplete(CompletedRow)
+	?totalMovement(NewXPos, NewYPos);
+	if (CompletedRow) {
+		-+totalMovement(NewXPos-Width, NewYPos);
+		-+rowComplete(false);
+	}
+	// remove goal coord from list
+	.delete(GoalCoordsLength-1, GoalCoords, NewGoalCoords);
+	-+goalCoords(NewGoalCoords);
+	!scan_movement;
+	.
 
 +! scan_movement: true <-
 	.print("Scanning...");
 	scan(6);
-	?totalMovement(TotalXDist, TotalYDist);
+	?totalMovement(TempTotalXDist, TempTotalYDist);
+	?goalCoords(GoalCoords);
 	rover.ia.get_map_size(Width, Height);
-	// check if moved all across map
-	if (Width <= TotalXDist + 8 & Height <= TotalYDist + 9) {
+	?totalMovement(TotalXDist, TotalYDist);
+	// check if moved half across map (other half done by other scanner)
+	if (Width <= TotalXDist + 8 & (Height/2) <= TotalYDist + 9) {
 		// if true, return to base and kill agent
-		move(Width - TotalXDist, Height - TotalYDist);
+		ia_submission.findRoute(TotalXDist, TotalYDist, 0, 0, MoveList);
+		// do moves
+		// loop through MoveList, doing each move in turn
+		for (.member(CurrentMoveVector, MoveList)) {
+			.nth(0, CurrentMoveVector, XVector);
+			.nth(1, CurrentMoveVector, YVector);
+			move(XVector, YVector);
+		}
 		// send list
 		!sendResourceList;
-		.kill_agent(agentScanner);
 	// check if moved all of map width
 	} elif (Width <= TotalXDist + 8) {
-		// move back to X coord 0 
-		move(Width - TotalXDist, 0);
-		-+totalMovement(0, TotalYDist);
-		// move 9 vertically
-		move(0, 9);
-		// update totalMovement
-		-+totalMovement(0, TotalYDist + 9);
+		// move 9 down
+		.concat(GoalCoords, [[0, TotalYDist + 9]], NewGoalCoords);
+		-+rowComplete(true);
 	// if neither of ifs are true, then continue movement on X axis
 	} else {
 		// move 8 right
-		move(8, 0);
-		// update totalMovement
-		-+totalMovement(TotalXDist + 8, TotalYDist);
+		.concat(GoalCoords, [[TotalXDist + 8, TotalYDist]], NewGoalCoords);
 	}
-	// recursively call scan_movement plan
-	!scan_movement;
+	-+goalCoords(NewGoalCoords);
+	!generalMove;
 	.
 	
 -! scan_movement: true <-
 	.print("Error doing movement & scanning");
+	// check if error is caused by lack of energy
+	rover.ia.check_status(EnergyLevel);
+	if (EnergyLevel <= 50) {
+		!sendResourceList
+	}
 	.
 	
 +! sendResourceList: true <-
-	.print("Sending resource list");
+	.print("Preparing to send resource list");
+	// check if second scanner has sent their list yet
+	?goldResourcesv2(GoldList2);
+	?diamondResourcesv2(DiamondList2);
+	// if so concat (use union to avoid duplciates)
+	if (GoldList2 == [] & DiamondList2 == []) {
+		// if empty, wait until sent
+		.wait({+goldResourcesv2(GoldResourceListv2)});
+		.wait({+diamondResourcesv2(DiamondResourceListv2)});
+	} else {
+		GoldResourceListv2 = GoldList2;
+		DiamondResourceListv2 = DiamondList2;
+	}
 	?goldResources(GoldResourceList);
 	?diamondResources(DiamondResourceList);
-	.print("Gold resource List: ", GoldResourceList);
-	.print("Diamond resource List: ", DiamondResourceList);
-	//.send(agentCollectorGold, tell, goldResources(GoldResourceList));
-	.send(agentCollectorDiamondExtra, tell, diamondResources(DiamondResourceList));
+	// concat lists
+	.union(GoldResourceList, GoldResourceListv2, NewGoldResourceList);
+	.union(DiamondResourceList, DiamondResourceListv2, NewDiamondResourceList);
+
+	.print("Complete gold resource List: ", NewGoldResourceList);
+	.print("Complete diamond resource List: ", NewDiamondResourceList);
+	.send(agentCollectorGoldExtra, tell, goldResources(NewGoldResourceList));
+	.send(agentCollectorDiamondExtra, tell, diamondResources(NewDiamondResourceList));
+	ia_submission.showMap;
+	.kill_agent(agentScanner);
 	.
 	
 -! sendResourceList: true <-
@@ -66,64 +128,18 @@ isDuplicate(true).
 	.print("Agent obstructed");
 	// work out correct X & Y distance from base
 	?totalMovement(TotalXDist, TotalYDist);
-	rover.ia.get_map_size(Width, Height);
 	XDistance = TotalXDist + XTravelled;
 	YDistance = TotalYDist + YTravelled;
-	if (XDistance >= Width/2) { 
-		// if the Y distance travelled is more than half the height, same as above
-		if (YDistance >= Height/2) {
-			NewXDistance = -(Width - XDistance);
-			NewYDistance = -(Height - YDistance);
-		} else {
-			NewXDistance = -(Width - XDistance);
-			NewYDistance = YDistance;
-		}
-	} else {
-		// if the Y distance travelled is more than half the height, same as above
-		if (YDistance >= Height/2) {
-			NewXDistance = XDistance;
-			NewYDistance = -(Height - YDistance);
-		} else {
-			// if the quickest route is the way we came, backtrack using this route
-			NewXDistance = XDistance;
-			NewYDistance = YDistance;
-		}
-	}	
-	if (XLeft > 0) { // if XLeft > 0 
-		// then obstacle is to the right
-		// add obstacle to map
-		ia_submission.addObstacle(NewXDistance + 1, NewYDistance);
-		
-		
-	} elif (YLeft > 0) { // else if YLeft > 0
-		// then obstacle is below
-		// add obstacle to map
-		ia_submission.addObstacle(NewXDistance, NewYDistance + 1);
-	}
 	// update TotalX and TotalY
 	-+totalMovement(XDistance, YDistance);
-	// scan to see surrounding environment
+	// do a scan to see surroundings
 	scan(6);
-	// use A* search to find quickest route around it
-	ia_submission.findRoute(NewXDistance, NewYDistance, NewXDistance + XLeft, NewYDistance + YLeft, MoveList);
-	.print(MoveList);
-	// do moves
-	// loop through MoveList, doing each move in turn
-	for (.member(CurrentMoveVector, MoveList)) {
-		.nth(0, CurrentMoveVector, XVector);
-		.nth(1, CurrentMoveVector, YVector);
-		move(XVector, YVector);
-		?totalMovement(CurrXDistance, CurrYDistance);
-		-+totalMovement(CurrXDistance + XVector, CurrYDistance + YVector);
-	}	
-	// once at goal, call scan_movement plan
-	!scan_movement;
+	!generalMove;
 	.
 	
 	
 @resource_found[atomic]
 + resource_found(ResourceType, Quantity, XDistToResource, YDistToResource): true <-
-	.print("Object found");
 	?totalMovement(TotalXDist, TotalYDist);
 	// add resource coord to array
 	?goldResources(GoldResourceList);
@@ -203,6 +219,10 @@ isDuplicate(true).
 		// add obstacle to map
 		ia_submission.addObstacle(NewXDistance, NewYDistance);
 	}
+	.
+	
+-! generalMove: true <-
+	.print("General move plan error");
 	.
 	
 	
