@@ -43,6 +43,10 @@ MAS ia_submission {
 			"discovery_type=none")
 	
 	agents:
+		agentScannerv4;
+		agentScannerv3;
+		agentCompetitiveV2;
+		agentCompetitiveV1;
 		agentScannerv2;
 		tester;
 		agentMaze;

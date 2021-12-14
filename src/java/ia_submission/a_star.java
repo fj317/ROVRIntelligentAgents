@@ -1,3 +1,6 @@
+// reference:
+// Lynch, J., 2020. Intelligent-Agents. [online] GitHub. Available at: <https://github.com/joe-lynch/intelligent-agents/blob/main/iaLib/a_star.java> [Accessed 10 December 2021].
+
 package ia_submission;
 import java.util.List;
 import java.util.ArrayList;

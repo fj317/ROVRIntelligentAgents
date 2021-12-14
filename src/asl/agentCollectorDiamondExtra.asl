@@ -81,7 +81,6 @@ currentPlan(0).
 		move(XVector, YVector);
 		?currentPos(NewXPos, NewYPos);
 		-+currentPos(NewXPos + XVector, NewYPos + YVector);
-		ia_submission.agentMovedUpdateMap(NewXPos + XVector, NewYPos + YVector, NewXPos, NewXPos)
 	}
 	.
 	

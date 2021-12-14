@@ -79,7 +79,7 @@ public class Handler {
 			routeCount++;
 		} 
 		// if more than 2 routes
-		if (routeCount > 2 || (XPos == 15 && YPos == 15)) {
+		if (routeCount > 2 || (XPos == this.baseCoord[0] && YPos == this.baseCoord[1])) {
 			System.out.println("Multiple routes to choose");
 			// find opposite direction
 			int oppositePreviousDirection = 0;
@@ -228,7 +228,7 @@ public class Handler {
 
 	
 	// updates map with obstacle in correct location
-	public void addObstacle(int obstacleX, int obstacleY) {
+	public synchronized void addObstacle(int obstacleX, int obstacleY) {
 		// swap as the way coords are done by agent is different
 		int actualObstacleCoordX = convertCoords(obstacleX, 0);
 		int actualObstacleCoordY = convertCoords(obstacleY, 1);
@@ -238,7 +238,7 @@ public class Handler {
 		//printMap();
 	}
 	
-	public List<int[]> getRoute(int startX, int startY, int endX, int endY) {
+	public synchronized List<int[]> getRoute(int startX, int startY, int endX, int endY) {
 		AStarObj.init();
     	//System.out.println("Start (x, y): (" + startX + ", " + startY + "). End (x, y): (" + endX + ", " + endY + ").");
 		// add base offset to start and end coords
@@ -250,36 +250,36 @@ public class Handler {
 		List<int[]> moveCoords =  AStarObj.get_route(this.map, actualStartCoordX, actualStartCoordY, actualEndCoordX, actualEndCoordY);
 		List<int[]> movementVector = new ArrayList<int[]>();
 		//printList(moveCoords);
-		// set start coords to 30 if they are 0 & next coord is greater than half of map, deal with wrapping issues
+		// set start coords to width/height if they are 0 & next coord is greater than half of map, deal with wrapping issues
 		if (actualStartCoordX == 0 && moveCoords.get(0)[0] > this.baseCoord[0]) {
-			actualStartCoordX = 30;
+			actualStartCoordX = getWidth();
 		} if (actualStartCoordY == 0 && moveCoords.get(0)[1] > this.baseCoord[1]) {
-			actualStartCoordY = 30;
+			actualStartCoordY = getHeight();
 		}
 		// a* search returns coords of where to move, now translate to movement vectors
 		int xValue = moveCoords.get(0)[0] - actualStartCoordX;
 		int yValue = moveCoords.get(0)[1] - actualStartCoordY;
-		if (xValue > 15) {
-			xValue -= 30;
-		} else if (xValue < -15) {
-			xValue += 30;
-		} if (yValue > 15) {
-			yValue -= 30;
-		} else if (yValue < -15) {
-			yValue += 30;
+		if (xValue > this.baseCoord[0]) {
+			xValue -= getWidth();
+		} else if (xValue < -this.baseCoord[0]) {
+			xValue += getWidth();
+		} if (yValue > this.baseCoord[1]) {
+			yValue -= getHeight();
+		} else if (yValue < -this.baseCoord[1]) {
+			yValue += getHeight();
 		}
 		movementVector.add(new int[] {xValue, yValue});
 		for (int i = 1; i < moveCoords.size(); i++) {
 			xValue = moveCoords.get(i)[0] - moveCoords.get(i-1)[0];
 			yValue = moveCoords.get(i)[1] - moveCoords.get(i-1)[1];
-			if (xValue > 15) {
-				xValue -= 30;
-			} else if (xValue < -15) {
-				xValue += 30;
-			} if (yValue > 15) {
-				yValue -= 30;
-			} else if (yValue < -15) {
-				yValue += 30;
+			if (xValue > this.baseCoord[0]) {
+				xValue -= getWidth();
+			} else if (xValue < -this.baseCoord[0]) {
+				xValue += getWidth();
+			} if (yValue > this.baseCoord[1]) {
+				yValue -= getHeight();
+			} else if (yValue < -this.baseCoord[1]) {
+				yValue += getHeight();
 			}
 			movementVector.add(new int[] {xValue, yValue});
 		}
@@ -293,29 +293,13 @@ public class Handler {
 	// G = gold
 	// A = agent
 	// B = base
-	public void initialiseMap(int width, int height) {
+	public synchronized void initialiseMap(int width, int height) {
 		this.map = new char[width][height];
 		for (char[] row: map)
 		    Arrays.fill(row, '_');
 		this.baseCoord[0] = Math.round(width / 2);
 		this.baseCoord[1] = Math.round(height / 2);
 		this.map[this.baseCoord[0]][this.baseCoord[1]] = 'B';
-	}
-	
-	public void updateAgentLocation(int XPos, int YPos, int previousXPos, int previousYPos) {
-		// convert agent's coords to proepr coord system
-		int actualCoordX = convertCoords(XPos, 0);
-		int actualCoordY = convertCoords(YPos, 1);
-		int actualPreviousCoordX = convertCoords(previousXPos, 0);
-		int actualPreviousCoordY = convertCoords(previousYPos, 1);	
-		// if agent isn't at base then update agent's location
-		if (actualCoordX != 15 && actualCoordY != 15) {
-			this.map[actualCoordX][actualCoordY] = 'O';
-		}
-		// if agent isn't at base then delete previous 
-		if (actualPreviousCoordX != 15 && actualPreviousCoordY != 15) {
-			this.map[actualPreviousCoordX][actualPreviousCoordY] = '_';
-		}
 	}
 	
 	public void addTempObject(int XPos, int YPos) {
@@ -330,17 +314,20 @@ public class Handler {
 		this.map[XPos][YPos] = '_';
 	}
 	
-	private int convertCoords(int coord, int XOrY) {
+	public int convertCoords(int coord, int XOrY) {
 		int finalCoord = coord;
 		// 0 is x coord, 1 is y coord
 		if (XOrY == 0) {
 			finalCoord = (this.baseCoord[0] + coord) % getWidth();
+			// if negative add width
+			if (finalCoord < 0) {
+				finalCoord += getWidth();
+			}
 		} else if (XOrY == 1) {
-			finalCoord = (this.baseCoord[0] + coord) % getHeight();
-		}
-		// if negative add 30
-		if (finalCoord < 0) {
-			finalCoord += 30;
+			finalCoord = (this.baseCoord[1] + coord) % getHeight();
+			if (finalCoord < 0) {
+				finalCoord += getHeight();
+			}
 		}
 		return finalCoord;
 	}

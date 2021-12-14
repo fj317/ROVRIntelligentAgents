@@ -59,9 +59,9 @@ MAS ia_submission {
 				
 		*/
 	
-		agentScanner [ capacity =0, scan_range=6, group=1, mindinspector="gui(cycle,html,history)"];
-		agentCollectorGold [ capacity =6, scan_range=0, group=2, mindinspector="gui(cycle,html,history)"];
-		agentCollectorDiamond [ capacity =6, scan_range=0, group=3, mindinspector="gui(cycle,html,history)"];
+		agentScannerv4 [ capacity =0, scan_range=6, group=1];//, mindinspector="gui(cycle,html,history)"];
+		agentCollectorGoldExtra [ capacity =6, scan_range=0, group=2];//, mindinspector="gui(cycle,html,history)"];
+		agentCollectorDiamondExtra [ capacity =6, scan_range=0, group=3];//, mindinspector="gui(cycle,html,history)"];
 		
 	aslSourcePath:
 		"src/asl";

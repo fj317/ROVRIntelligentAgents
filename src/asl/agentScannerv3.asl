@@ -11,10 +11,7 @@ rowComplete(false).
 	.print("Initialising stuff");
 	rover.ia.get_map_size(Width, Height);
 	ia_submission.mapSetup(Width, Height);
-	// move half height down
-	.concat([], [[0, Height/2]], NewGoalCoords);
-	-+goalCoords(NewGoalCoords);
-	!generalMove
+	!scan_movement;
 	.
 	
 +! generalMove: true <-
@@ -35,7 +32,6 @@ rowComplete(false).
 		move(XVector, YVector);
 		?totalMovement(CurrXPos, CurrYPos);
 		-+totalMovement(CurrXPos + XVector,  CurrYPos + YVector);
-		.print("(x, y): ", CurrXPos, ", ", CurrYPos);
 	}
 	// check if completed whole row
 	?rowComplete(CompletedRow)
@@ -44,7 +40,6 @@ rowComplete(false).
 		-+totalMovement(NewXPos-Width, NewYPos);
 		-+rowComplete(false);
 	}
-	.print("YPos: ", NewYPos);
 	// remove goal coord from list
 	.delete(GoalCoordsLength-1, GoalCoords, NewGoalCoords);
 	-+goalCoords(NewGoalCoords);
@@ -59,7 +54,7 @@ rowComplete(false).
 	rover.ia.get_map_size(Width, Height);
 	?totalMovement(TotalXDist, TotalYDist);
 	// check if moved half across map (other half done by other scanner)
-	if (Width <= TotalXDist + 8 & (Height/4) <= TotalYDist + 9) {
+	if (Width <= TotalXDist + 8 & Height <= TotalYDist + 9) {
 		// if true, return to base and kill agent
 		ia_submission.findRoute(TotalXDist, TotalYDist, 0, 0, MoveList);
 		// do moves
@@ -96,14 +91,11 @@ rowComplete(false).
 	
 +! sendResourceList: true <-
 	.print("Sending resource list");
-	?goldResources(GoldResourceListv2);
-	?diamondResources(DiamondResourceListv2);
-	.print("V2 scanner gold resource List: ", GoldResourceListv2);
-	.print("V2 scanner diamond resource List: ", DiamondResourceListv2);
-	.send(agentScanner, tell, goldResourcesv2(GoldResourceListv2));
-	.send(agentScanner, tell, diamondResourcesv2(DiamondResourceListv2));
+	?goldResources(GoldResourceList);
+	.print("Scanner gold resource List: ", GoldResourceList);
+	.send(agentCollectorGoldExtra, tell, goldResources(GoldResourceList));
 	// after sent, kill agent
-	.kill_agent(agentScannerv2);
+	.kill_agent(agentScannerv3);
 	.
 
 	
@@ -147,7 +139,14 @@ rowComplete(false).
 				.nth(3, X, YDistanceList);
 				// compare XDistances and YDistances of each gold with the newGold
 				// if repeated then it is a duplicate
-				if (XDistanceList == XDistance & YDistanceList == YDistance) {
+				
+				// normalise coords to compare 
+				ia_submission.convertCoords(XDistanceList, 0, NewXDistanceList);
+				ia_submission.convertCoords(YDistanceList, 1, NewYDistanceList);
+				ia_submission.convertCoords(XDistance, 0, NewXDistance);
+				ia_submission.convertCoords(YDistance, 1, NewYDistance);
+				
+				if (NewXDistanceList == NewXDistance & NewYDistanceList == NewYDistance) {
 					-+isDuplicate(true);
 				}
 			}
@@ -169,7 +168,14 @@ rowComplete(false).
 				.nth(3, Y, YDistanceList);
 				// compare XDistances and YDistances of each gold with the newGold
 				// if repeated then it is a duplicate
-				if (XDistanceList == XDistance & YDistanceList == YDistance) {
+				
+				// normalise coords to compare 
+				ia_submission.convertCoords(XDistanceList, 0, NewXDistanceList);
+				ia_submission.convertCoords(YDistanceList, 1, NewYDistanceList);
+				ia_submission.convertCoords(XDistance, 0, NewXDistance);
+				ia_submission.convertCoords(YDistance, 1, NewYDistance);
+				
+				if (NewXDistanceList == NewXDistance & NewYDistanceList == NewYDistance) {
 					-+isDuplicate(true);
 				}
 			}

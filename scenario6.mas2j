@@ -57,7 +57,8 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		tester [ capacity =3, scan_range=3, group=1, mindinspector="gui(cycle,html,history)"];
+		agentCompetitiveV1 [ capacity =3, scan_range=3, group=4];//, mindinspector="gui(cycle,html,history)"];
+		agentCompetitiveV2 [ capacity =3, scan_range=3, group=6];//, mindinspector="gui(cycle,html,history)"];
 		
 	aslSourcePath:
 		"src/asl";

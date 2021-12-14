@@ -17,7 +17,7 @@ rowComplete(false).
 	.
 	
 +! generalMove: true <-
-	.drop_all_intentions;
+	.drop_all_events;
 	// use A* search to find route to goal coords
 	?goalCoords(GoalCoords);
 	rover.ia.get_map_size(Width, Height);
@@ -147,32 +147,12 @@ rowComplete(false).
 	rover.ia.get_map_size(Width, Height);
 	XDistance = TotalXDist + XDistToResource;
 	YDistance = TotalYDist + YDistToResource;
-	if (XDistance >= Width/2) { 
-		// if the Y distance travelled is more than half the height, same as above
-		if (YDistance >= Height/2) {
-			NewXDistance = -(Width - XDistance);
-			NewYDistance = -(Height - YDistance);
-		} else {
-			NewXDistance = -(Width - XDistance);
-			NewYDistance = YDistance;
-		}
-	} else {
-		// if the Y distance travelled is more than half the height, same as above
-		if (YDistance >= Height/2) {
-			NewXDistance = XDistance;
-			NewYDistance = -(Height - YDistance);
-		} else {
-			// if the quickest route is the way we came, backtrack using this route
-			NewXDistance = XDistance;
-			NewYDistance = YDistance;
-		}
-	}	
 	-+isDuplicate(false);
 	// if gold:
 	if (ResourceType = "Gold") {
 		// if list is empty add to list
 		if (.empty(GoldResourceList)) {
-			-+goldResources([[ResourceType, Quantity, NewXDistance, NewYDistance]])
+			-+goldResources([[ResourceType, Quantity, XDistance, YDistance]])
 		} else {
 			// check if gold already in list
 			for(.member(X, GoldResourceList)) {
@@ -180,21 +160,21 @@ rowComplete(false).
 				.nth(3, X, YDistanceList);
 				// compare XDistances and YDistances of each gold with the newGold
 				// if repeated then it is a duplicate
-				if (XDistanceList == NewXDistance & YDistanceList == NewYDistance) {
+				if (XDistanceList == XDistance & YDistanceList == YDistance) {
 					-+isDuplicate(true);
 				}
 			}
 			?isDuplicate(IsDuplicateVar);
 			// if not duplicate add to list
 			if (IsDuplicateVar == false) {
-				.concat(GoldResourceList, [[ResourceType, Quantity,  NewXDistance, NewYDistance]], NewGoldResourceList);
+				.concat(GoldResourceList, [[ResourceType, Quantity,  XDistance, YDistance]], NewGoldResourceList);
 				-+goldResources(NewGoldResourceList);
 			}		
 		}
 	} elif (ResourceType == "Diamond") {
 		// else if diamond:
 		if (.empty(DiamondResourceList)) {
-			-+diamondResources([[ResourceType, Quantity, NewXDistance, NewYDistance]])
+			-+diamondResources([[ResourceType, Quantity, XDistance, YDistance]])
 		} else {
 			// check if gold already in list
 			for(.member(Y, DiamondResourceList)) {
@@ -202,14 +182,14 @@ rowComplete(false).
 				.nth(3, Y, YDistanceList);
 				// compare XDistances and YDistances of each gold with the newGold
 				// if repeated then it is a duplicate
-				if (XDistanceList == NewXDistance & YDistanceList == NewYDistance) {
+				if (XDistanceList == XDistance & YDistanceList == YDistance) {
 					-+isDuplicate(true);
 				}
 			}
 			?isDuplicate(IsDuplicateVar);
 			// if not duplicate add to list
 			if (IsDuplicateVar == false) {
-				.concat(DiamondResourceList, [[ResourceType, Quantity, NewXDistance, NewYDistance]], NewDiamondResourceList);
+				.concat(DiamondResourceList, [[ResourceType, Quantity, XDistance, YDistance]], NewDiamondResourceList);
 				-+diamondResources(NewDiamondResourceList);
 			}		
 		}
@@ -217,7 +197,7 @@ rowComplete(false).
 	} elif (ResourceType == "Obstacle") {
 		// else if obstacle
 		// add obstacle to map
-		ia_submission.addObstacle(NewXDistance, NewYDistance);
+		ia_submission.addObstacle(XDistance, YDistance);
 	}
 	.
 	
